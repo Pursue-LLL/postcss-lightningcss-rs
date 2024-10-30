@@ -1,3 +1,3 @@
-# `@lyl/rollup-plugin-postcss-rs-darwin-arm64`
+# `@gogors/postcss-lightningcss-rs-darwin-arm64`
 
-This is the **aarch64-apple-darwin** binary for `@lyl/rollup-plugin-postcss-rs`
+This is the **aarch64-apple-darwin** binary for `@gogors/postcss-lightningcss-rs`

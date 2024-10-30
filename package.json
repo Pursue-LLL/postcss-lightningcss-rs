@@ -1,10 +1,19 @@
 {
-  "name": "@lll/rollup-plugin-postcss-rs",
-  "version": "0.0.0",
+  "name": "@gogors/postcss-lightningcss-rs",
+  "version": "0.0.0-alpha.2",
+  "description": "postcss-lightningcss-rs",
   "main": "index.js",
+  "scripts": {
+    "artifacts": "napi artifacts",
+    "build": "napi build --cargo-cwd crates/binding --platform --release",
+    "build:debug": "napi build --cargo-cwd crates/binding --platform",
+    "prepublishOnly": "napi prepublish -t npm",
+    "test": "ava",
+    "version": "napi version"
+  },
   "types": "index.d.ts",
   "napi": {
-    "name": "rollup-plugin-postcss-rs",
+    "name": "postcss-lightningcss-rs",
     "triples": {
       "additional": [
         "aarch64-apple-darwin",
@@ -14,28 +23,40 @@
       ]
     }
   },
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
   "license": "MIT",
   "devDependencies": {
     "@napi-rs/cli": "^2.18.4",
-    "ava": "^6.0.1"
+    "ava": "^6.0.1",
+    "postcss": "^8.4.47",
+    "postcss-lightningcss": "^1.0.1"
   },
   "ava": {
     "timeout": "3m"
   },
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:Pursue-LLL/rollup-plugin-postcss-rs.git"
+  "repository": "git@github.com:Pursue-LLL/postcss-lightningcss-rs.git",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
   },
   "engines": {
-    "node": ">= 10"
+    "node": ">= 20"
   },
-  "scripts": {
-    "artifacts": "napi artifacts",
-    "build": "napi build --platform --release",
-    "build:debug": "napi build --platform",
-    "prepublishOnly": "napi prepublish -t npm",
-    "test": "ava",
-    "universal": "napi universal",
-    "version": "napi version"
+  "packageManager": "pnpm@9.12.1",
+  "optionalDependencies": {
+    "@gogors/postcss-lightningcss-rs-win32-x64-msvc": "0.0.0-alpha.1",
+    "@gogors/postcss-lightningcss-rs-darwin-x64": "0.0.0-alpha.1",
+    "@gogors/postcss-lightningcss-rs-linux-x64-gnu": "0.0.0-alpha.1",
+    "@gogors/postcss-lightningcss-rs-darwin-arm64": "0.0.0-alpha.1",
+    "@gogors/postcss-lightningcss-rs-linux-arm64-gnu": "0.0.0-alpha.1",
+    "@gogors/postcss-lightningcss-rs-linux-arm64-musl": "0.0.0-alpha.1",
+    "@gogors/postcss-lightningcss-rs-win32-arm64-msvc": "0.0.0-alpha.1"
+  },
+  "author": {
+    "name": "YuluLiu",
+    "email": "yululiu2018@gmail.com"
   }
 }

@@ -1,0 +1,20 @@
+[package]
+name = "postcss_lightningcss_rs_binding"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "3.0.0-alpha.15", features = ["serde-json","napi9"] }
+napi-derive = { version = "3.0.0-alpha.14" }
+lightningcss = { git = "https://github.com/parcel-bundler/lightningcss", branch = "master", features = ["browserslist", "sourcemap"] }
+serde_json = "1.0.132"
+lightningcss_rs = { path = "../lightningcss-rs" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+jemallocator = { version = "0.5.0", features = ["disable_initial_exec_tls"] }
+
+[build-dependencies]
+napi-build = "2.1.3"

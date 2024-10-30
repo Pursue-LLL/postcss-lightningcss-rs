@@ -195,3 +195,7 @@ Cargo.lock
 !.yarn/versions
 
 *.node
+package1.json
+package2.json
+README_CN.md
+

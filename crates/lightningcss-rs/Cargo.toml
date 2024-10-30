@@ -1,0 +1,15 @@
+[package]
+name = "lightningcss_rs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+napi = { version = "3.0.0-alpha.15", features = ["napi9"] }
+napi-derive = { version = "3.0.0-alpha.14" }
+lightningcss = { git = "https://github.com/parcel-bundler/lightningcss", branch = "master", features = ["browserslist", "sourcemap"] }
+serde = "1.0"
+serde_json = "1.0"
+parcel_sourcemap = "2.1.1"
