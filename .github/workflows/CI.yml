@@ -56,18 +56,36 @@ jobs:
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
+      # - name: Clear Existing Yarn Cache
+      #   run: |
+      #     rm -rf ${{ runner.tool_cache }}/node/*/
+      #     rm -rf ~/.yarn/cache
+      - name: Clear Windows Existing Yarn Cache
+        if: ${{ matrix.settings.host == 'windows-latest' }}
+        shell: pwsh
+        run: |
+          if (Test-Path "C:\npm\prefix\yarn.cmd") {
+            Remove-Item -Force "C:\npm\prefix\yarn.cmd"
+          }
+      # 安装node
       - name: Setup node
         uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
         with:
           node-version: 20
           cache: yarn
-      - name: Install
+      # 安装rust
+      - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         if: ${{ !matrix.settings.docker }}
         with:
           toolchain: stable
           targets: ${{ matrix.settings.target }}
+      # 缓存 Rust 的 Cargo 构建工件和依赖项
       - name: Cache cargo
         uses: actions/cache@v4
         with:
@@ -86,12 +104,21 @@ jobs:
         run: ${{ matrix.settings.setup }}
         if: ${{ matrix.settings.setup }}
         shell: bash
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Setup node x86
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         run: yarn config set supportedArchitectures.cpu "ia32"
         shell: bash
+      # 安装依赖
       - name: Install dependencies
         run: yarn install
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Setup node x86
         uses: actions/setup-node@v4
         if: matrix.settings.target == 'i686-pc-windows-msvc'
@@ -106,10 +133,12 @@ jobs:
           image: ${{ matrix.settings.docker }}
           options: '--user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/usr/local/cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/usr/local/cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/usr/local/cargo/registry/index -v ${{ github.workspace }}:/build -w /build'
           run: ${{ matrix.settings.build }}
+      # 构建
       - name: Build
         run: ${{ matrix.settings.build }}
         if: ${{ !matrix.settings.docker }}
         shell: bash
+      # 上传文件或目录作为构建工件。
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -131,15 +160,24 @@ jobs:
         node:
           - '18'
           - '20'
+    #指定运行的虚拟环境
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: yarn
           architecture: x64
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Install dependencies
         run: yarn install
       - name: Download artifacts
@@ -165,11 +203,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
           cache: yarn
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Install dependencies
         run: yarn install
       - name: Download artifacts
@@ -180,8 +226,12 @@ jobs:
       - name: List packages
         run: ls -R .
         shell: bash
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Test bindings
-        run: docker run --rm -v $(pwd):/build -w /build node:${{ matrix.node }}-slim yarn test
+        run: docker run --rm -v $(pwd):/build -w /build node:${{ matrix.node }}-slim bash -c "corepack enable && corepack prepare yarn@4.5.1 --activate && yarn test"
   test-linux-aarch64-gnu-binding:
     name: Test bindings on aarch64-unknown-linux-gnu - node@${{ matrix.node }}
     needs:
@@ -195,6 +245,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -203,6 +255,10 @@ jobs:
       - name: List packages
         run: ls -R .
         shell: bash
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Install dependencies
         run: |
           yarn config set supportedArchitectures.cpu "arm64"
@@ -213,22 +269,35 @@ jobs:
         with:
           platforms: arm64
       - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Setup and run tests
         uses: addnab/docker-run-action@v3
         with:
           image: node:${{ matrix.node }}-slim
           options: '--platform linux/arm64 -v ${{ github.workspace }}:/build -w /build'
           run: |
-            set -e
+            corepack enable
+            corepack prepare yarn@4.5.1 --activate
             yarn test
             ls -la
   test-linux-aarch64-musl-binding:
     name: Test bindings on aarch64-unknown-linux-musl - node@${{ matrix.node }}
     needs:
       - build
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - '18'
+          - '20'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -237,6 +306,10 @@ jobs:
       - name: List packages
         run: ls -R .
         shell: bash
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Install dependencies
         run: |
           yarn config set supportedArchitectures.cpu "arm64"
@@ -247,12 +320,18 @@ jobs:
         with:
           platforms: arm64
       - run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Setup and run tests
         uses: addnab/docker-run-action@v3
         with:
           image: node:lts-alpine
           options: '--platform linux/arm64 -v ${{ github.workspace }}:/build -w /build'
           run: |
+            corepack enable
+            corepack prepare yarn@4.5.1 --activate
             set -e
             yarn test
   publish:
@@ -265,11 +344,19 @@ jobs:
       - test-linux-aarch64-musl-binding
     steps:
       - uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: yarn
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Prepare Yarn
+        run: corepack prepare yarn@4.5.1 --activate
       - name: Install dependencies
         run: yarn install
       - name: Download all artifacts
@@ -292,7 +379,7 @@ jobs:
           # grep 检查是否匹配特定格式
 
           # 检查是否匹配完整的版本号格式（如 "1.0.0"）
-          if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$";
+          if git log -1 --pretty=%B | grep "v[0-9]\+\.[0-9]\+\.[0-9]\+$";
           then
             # 配置 npm registry 的认证令牌
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
@@ -300,7 +387,7 @@ jobs:
             npm publish --access public
 
           # 检查是否匹配预发布版本号格式（如 "1.0.0-beta.1"）
-          elif git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+";
+          elif git log -1 --pretty=%B | grep "v[0-9]\+\.[0-9]\+\.[0-9]\+";
           then
             # 配置 npm registry 的认证令牌
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
