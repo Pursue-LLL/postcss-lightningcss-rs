@@ -31,8 +31,7 @@
   "devDependencies": {
     "@napi-rs/cli": "^2.18.4",
     "ava": "^6.0.1",
-    "postcss": "^8.4.47",
-    "postcss-lightningcss": "^1.0.1"
+    "postcss": "^8.4.47"
   },
   "ava": {
     "timeout": "3m"
@@ -43,20 +42,11 @@
     "access": "public"
   },
   "engines": {
-    "node": ">= 20"
-  },
-  "packageManager": "pnpm@9.12.1",
-  "optionalDependencies": {
-    "@gogors/postcss-lightningcss-rs-win32-x64-msvc": "0.0.0-alpha.1",
-    "@gogors/postcss-lightningcss-rs-darwin-x64": "0.0.0-alpha.1",
-    "@gogors/postcss-lightningcss-rs-linux-x64-gnu": "0.0.0-alpha.1",
-    "@gogors/postcss-lightningcss-rs-darwin-arm64": "0.0.0-alpha.1",
-    "@gogors/postcss-lightningcss-rs-linux-arm64-gnu": "0.0.0-alpha.1",
-    "@gogors/postcss-lightningcss-rs-linux-arm64-musl": "0.0.0-alpha.1",
-    "@gogors/postcss-lightningcss-rs-win32-arm64-msvc": "0.0.0-alpha.1"
+    "node": ">= 10"
   },
   "author": {
     "name": "YuluLiu",
     "email": "yululiu2018@gmail.com"
-  }
+  },
+  "packageManager": "yarn@4.5.1"
 }
