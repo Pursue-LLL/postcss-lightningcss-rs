@@ -168,6 +168,14 @@ jobs:
         run: corepack enable
       - name: Prepare Yarn
         run: corepack prepare yarn@4.5.1 --activate
+      # windows 存在1.22.22的缓存需要删除
+      - name: Clear Windows Existing Yarn Cache
+        if: ${{ matrix.settings.host == 'windows-latest' }}
+        shell: pwsh
+        run: |
+          if (Test-Path "C:\npm\prefix\yarn.cmd") {
+            Remove-Item -Force "C:\npm\prefix\yarn.cmd"
+          }
       - name: Setup node
         uses: actions/setup-node@v4
         with:
