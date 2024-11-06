@@ -246,7 +246,7 @@ jobs:
         run: ls -R .
         shell: bash
       - name: Test bindings
-      run: |
+        run: |
           docker run --rm \
             -v $(pwd):/build \
             -v $(pwd)/.yarn:/root/.yarn \
