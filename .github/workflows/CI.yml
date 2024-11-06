@@ -245,12 +245,8 @@ jobs:
       - name: List packages
         run: ls -R .
         shell: bash
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Prepare Yarn
-        run: corepack prepare yarn@4.5.1 --activate
       - name: Test bindings
-        run: |
+      run: |
           docker run --rm \
             -v $(pwd):/build \
             -v $(pwd)/.yarn:/root/.yarn \
@@ -263,7 +259,17 @@ jobs:
               yarn config set enableGlobalCache false
               yarn config set cacheFolder ./.yarn/cache
               yarn install
-              yarn test && exit 0
+              yarn test
+              # 保存测试的退出码
+              TEST_EXIT_CODE=\$?
+              # 输出测试结果
+              echo \"Test exit code: \${TEST_EXIT_CODE}\"
+              # 如果测试通过，确保返回0
+              if [ \$TEST_EXIT_CODE -eq 0 ]; then
+                exit 0
+              else
+                exit \$TEST_EXIT_CODE
+              fi
             "
   test-linux-aarch64-gnu-binding:
     name: Test bindings on aarch64-unknown-linux-gnu - node@${{ matrix.node }}
