@@ -13,7 +13,7 @@ use lightningcss_rs::types::{PluginOptions, TransformOptions};
 
 #[napi]
 /**
- * 转换css，通用api
+ * Transform CSS with general API
  */
 pub fn transform(css: String, options: TransformOptions, env: Env) -> napi::Result<JsUnknown> {
   let res = transform_css(&css, &options);
@@ -26,24 +26,24 @@ pub fn transform(css: String, options: TransformOptions, env: Env) -> napi::Resu
 #[allow(dead_code)]
 #[napi]
 /**
- * 导出 PostCSS 插件对象
+ * Export PostCSS plugin object
  */
 fn postcss_lightningcss_plugin(options: PluginOptions, env: Env) -> Result<JsObject> {
   let mut plugin = env.create_object()?;
 
-  // 使用browserslist的from_browserslist方法将js中传入browserslist格式的targets转换为Lightningcss需要的targets
-  // 只在创建插件时转换一次，后续可以复用targets对象
+  // Use browserslist's from_browserslist method to convert targets from JS browserslist format to LightningCSS format
+  // Convert only once when creating plugin, targets object can be reused later
   let targets = options.targets.unwrap_or_default();
   let targets = Browsers::from_browserslist(targets)
     .map_err(|e| napi::Error::from_reason(format!("{:?}", e)))?;
 
-  // 将 PluginOptions 转换为 TransformOptions
+  // Convert PluginOptions to TransformOptions
   let lightningcss_options = TransformOptions {
-    // 将crate中的targets转换为TransformOptions中的targets
+    // Convert targets from crate to TransformOptions targets
     targets: match targets {
       Some(t) => Some(t.into()),
       None => None,
-    }, // 等价于targets.map(Into::into)
+    }, // Equivalent to targets.map(Into::into)
     css_modules: options.css_modules,
     drafts: options.drafts,
     minify: options.minify,
@@ -53,33 +53,33 @@ fn postcss_lightningcss_plugin(options: PluginOptions, env: Env) -> Result<JsObj
     analyze_dependencies: options.analyze_dependencies,
     include: options.include,
     exclude: options.exclude,
-    // NOTE: postcss本身支持soucrmap，暂不重复实现
+    // NOTE: PostCSS already supports sourcemap, no need to implement again
     source_map: None,
     input_source_map: None,
     project_root: None,
     filename: None,
   };
-  // 设置插件名称
+  // Set plugin name
   plugin.set("postcssPlugin", "postcss-lightningcss")?;
 
-  // once_exit 监听函数（有多少文件就会执行多少次）
+  // OnceExit listener function (executes once for each file)
   let once_exit: Function<'_, JsUnknown, ()> = env.create_function_from_closure(
     "OnceExit",
     move |ctx: FunctionCallContext| -> Result<()> {
-      // 获取postcss参数
+      // Get PostCSS parameters
       let (root, res): (JsObject, JsObject) = ctx.args()?;
       let mut result: JsObject = res.get_named_property("result")?;
       let postcss: JsFunction = res.get_named_property("postcss")?;
       let postcss_obj = postcss.coerce_to_object()?;
 
-      // 调用toResult方法获取postcss处理过的css
+      // Call toResult method to get CSS processed by PostCSS
       let css = root
         .get_named_property::<JsFunction>("toResult")?
         .call::<JsUnknown>(Some(&root), &[])?
         .coerce_to_object()?
         .get_named_property::<String>("css")?;
 
-      // 获取 transform_css 的结果
+      // Get transform_css result
       let transformed = transform_css(&css, &lightningcss_options)
         .map_err(|e| napi::Error::from_reason(format!("{:?}", e)))?;
 
@@ -93,7 +93,7 @@ fn postcss_lightningcss_plugin(options: PluginOptions, env: Env) -> Result<JsObj
           .unwrap_or_default(),
       )?;
 
-      // 调用postcss的parse方法，传入css和parse_options，将结果赋值给result.root
+      // Call PostCSS parse method with css and parse_options, assign result to result.root
       result.set_named_property(
         "root",
         postcss_obj
@@ -109,7 +109,7 @@ fn postcss_lightningcss_plugin(options: PluginOptions, env: Env) -> Result<JsObj
   )?;
   plugin.set("OnceExit", once_exit)?;
 
-  // 返回插件对象
+  // Return plugin object
   Ok(plugin)
 }
 

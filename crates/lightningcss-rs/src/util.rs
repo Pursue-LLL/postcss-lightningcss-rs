@@ -1,10 +1,3 @@
-// use base64::encode;
-
-// pub const SOURCEMAP_COMMENT: &str = "sourceMappingURL=data:application/json;base64";
-
-// pub fn to_base64(content: String) -> String {
-//     encode(content)
-// }
 use crate::types::DraftsOptions;
 use lightningcss::stylesheet::ParserFlags;
 

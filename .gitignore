@@ -193,9 +193,11 @@ Cargo.lock
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+.cache/yarn
 
 *.node
 package1.json
 package2.json
 README_CN.md
 
+.cargo-cache

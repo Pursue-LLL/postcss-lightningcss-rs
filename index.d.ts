@@ -10,6 +10,7 @@ export interface AnalyzeDependenciesConfig {
 }
 export interface CssModulesConfig {
   pattern?: string
+  container?: boolean
   dashedIdents?: boolean
   animation?: boolean
   grid?: boolean
