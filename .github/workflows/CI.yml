@@ -296,10 +296,18 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: node:${{ matrix.node }}-slim
-          options: '--platform linux/arm64 -v ${{ github.workspace }}:/build -w /build'
+          options: >-
+            --platform linux/arm64 
+            -v ${{ github.workspace }}:/build 
+            -v ${{ github.workspace }}/.yarn:/root/.yarn
+            -v ${{ github.workspace }}/.cache/yarn:/root/.cache/yarn
+            -w /build
           run: |
             corepack enable
             corepack prepare yarn@4.5.1 --activate
+            yarn config set enableGlobalCache false
+            yarn config set cacheFolder ./.yarn/cache
+            yarn install
             yarn test
             ls -la
   test-linux-aarch64-musl-binding:
@@ -347,12 +355,20 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: node:lts-alpine
-          options: '--platform linux/arm64 -v ${{ github.workspace }}:/build -w /build'
+          options: >-
+            --platform linux/arm64 
+            -v ${{ github.workspace }}:/build 
+            -v ${{ github.workspace }}/.yarn:/root/.yarn
+            -v ${{ github.workspace }}/.cache/yarn:/root/.cache/yarn
+            -w /build
           run: |
             corepack enable
             corepack prepare yarn@4.5.1 --activate
-            set -e
+            yarn config set enableGlobalCache false
+            yarn config set cacheFolder ./.yarn/cache
+            yarn install
             yarn test
+            ls -la
   publish:
     name: Publish
     runs-on: ubuntu-latest
