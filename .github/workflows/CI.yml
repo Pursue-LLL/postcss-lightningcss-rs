@@ -400,6 +400,11 @@ jobs:
       - name: List packages
         run: ls -R ./npm
         shell: bash
+      - name: Setup for publishing
+        run: |
+          npm config set provenance true
+          # 全局安装 napi-rs/cli
+          npm install -g @napi-rs/cli
       - name: Publish
         run: |
           # 启用 npm 包的来源证明功能
