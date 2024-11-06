@@ -208,7 +208,13 @@ jobs:
         run: ls -R .
         shell: bash
       - name: Test bindings
-        run: yarn test
+        run: |
+          docker run --rm \
+            -v $(pwd):/build \
+            -w /build \
+            --entrypoint yarn \
+            node:${{ matrix.node }}-slim \
+            test
   test-linux-x64-gnu-binding:
     name: Test bindings on Linux-x64-gnu - node@${{ matrix.node }}
     needs:
@@ -408,7 +414,7 @@ jobs:
             # 发布正式版本
             npm publish --access public
 
-          # 检查是否匹配预发布版本号格式（如 "1.0.0-beta.1"）
+          # 检查是否匹配预发��版本号格式（如 "1.0.0-beta.1"）
           elif git log -1 --pretty=%B | grep "v[0-9]\+\.[0-9]\+\.[0-9]\+";
           then
             # 配置 npm registry 的认证令牌
