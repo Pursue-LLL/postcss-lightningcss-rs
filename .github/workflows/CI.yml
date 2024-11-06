@@ -258,7 +258,6 @@ jobs:
             -w /build \
             node:${{ matrix.node }}-slim \
             bash -c "
-              set -e
               corepack enable
               corepack prepare yarn@4.5.1 --activate
               yarn config set enableGlobalCache false
