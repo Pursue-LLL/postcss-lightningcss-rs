@@ -38,6 +38,7 @@ pub struct AnalyzeDependenciesConfig {
 #[derive(Debug)]
 pub struct CssModulesConfig {
   pub pattern: Option<String>,
+  pub container: Option<bool>,
   pub dashed_idents: Option<bool>,
   pub animation: Option<bool>,
   pub grid: Option<bool>,
@@ -60,6 +61,7 @@ impl<'i> TryFrom<&'i CssModulesConfig> for lightningcss::css_modules::Config<'i>
 
     Ok(lightningcss::css_modules::Config {
       pattern,
+      container: wrapper.container.unwrap_or(true),
       dashed_idents: wrapper.dashed_idents.unwrap_or_default(),
       animation: wrapper.animation.unwrap_or(true),
       grid: wrapper.grid.unwrap_or(true),

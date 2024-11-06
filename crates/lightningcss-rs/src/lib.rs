@@ -18,7 +18,7 @@ pub fn transform_css<'i>(
   let filename = options.filename.clone().unwrap_or_default();
   let project_root = options.project_root.as_deref();
 
-  // 解析 CSS
+  // Parse CSS
   let mut stylesheet = StyleSheet::parse(
     css,
     ParserOptions {
@@ -31,7 +31,7 @@ pub fn transform_css<'i>(
           CssModulesOption::Config(c) => {
             match c.try_into() {
               Ok(config) => Some(config),
-              Err(e) => return Err(e), // 捕获并返回错误
+              Err(e) => return Err(e), // Capture and return error
             }
           }
         }
@@ -45,8 +45,8 @@ pub fn transform_css<'i>(
   )
   .map_err(|e| CompileError::ParseError(e))?;
 
-  // 设置目标浏览器
-  // 为了性能，每次调用transform时重用相同的targets对象，所以targets对象需要在外部构建好
+  // Set target browsers
+  // For performance, reuse the same targets object for each transform call, so targets object needs to be built externally
   let targets = Targets {
     browsers: Some(Browsers::from(
       options
@@ -54,13 +54,13 @@ pub fn transform_css<'i>(
         .as_ref()
         .unwrap_or(&TransformBrowsers::default()),
     )),
-    // 基本类型的copy转换开销较低，可以transmute无损转换，但是由于lightningcss的targets的browser无法指定#[repr(C)]来确保内存布局一致，没有字段赋值的形式安全
+    // Basic type copy conversion has low overhead, can use transmute for lossless conversion, but since lightningcss's targets browser cannot specify #[repr(C)] to ensure memory layout consistency, field assignment form is safer
     // browsers: unsafe { std::mem::transmute(options.targets.clone().unwrap_or_default()) },
     include: Features::from_bits_truncate(options.include.unwrap_or(0)),
     exclude: Features::from_bits_truncate(options.exclude.unwrap_or(0)),
   };
 
-  // 压缩 CSS
+  // Minify CSS
   stylesheet
     .minify(MinifyOptions {
       targets,
@@ -73,7 +73,7 @@ pub fn transform_css<'i>(
     })
     .map_err(|e| CompileError::MinifyError(e))?;
 
-  // 生成source_map
+  // Generate source map
   let mut source_map = if options.source_map.unwrap_or_default() {
     let mut sm = SourceMap::new(project_root.unwrap_or("/"));
     sm.add_source(&filename);
@@ -84,7 +84,7 @@ pub fn transform_css<'i>(
     None
   };
 
-  // 转化输出
+  // Transform output
   let output = stylesheet
     .to_css(PrinterOptions {
       minify: options.minify.unwrap_or(true),
@@ -103,7 +103,7 @@ pub fn transform_css<'i>(
     })
     .map_err(|e| CompileError::PrinterError(e))?;
 
-  // 合并source_map（如果输入的 CSS 来自其他编译器，已有源映射文件的情况）
+  // Merge source map (if input CSS comes from other compilers with existing source map)
   let map = if let Some(mut source_map) = source_map {
     if let Some(input_source_map) = &options.input_source_map {
       if let Ok(mut sm) = SourceMap::from_json("/", input_source_map) {
@@ -111,15 +111,15 @@ pub fn transform_css<'i>(
       }
     }
 
-    // .ok()：Result 类型的方法，用于将 Result<T, E> 转换为 Option<T>
+    // .ok(): Result type method to convert Result<T, E> to Option<T>
     source_map.to_json(None).ok()
   } else {
     None
   };
 
   Ok(TransformResult {
-    code: output.code, // 返回处理后的css
-    map,               // 返回json 字符串格式的source_map
+    code: output.code, // Return processed CSS
+    map,              // Return source map in JSON string format
     exports: output.exports,
     references: output.references,
     dependencies: output.dependencies,

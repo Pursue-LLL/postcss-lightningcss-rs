@@ -1,0 +1,23 @@
+[toolchain]
+# 使用 Rust 的稳定版本
+channel = "nightly"    # 可选值: stable, beta, nightly
+
+# 需要支持的目标平台
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-musl",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+  "x86_64-pc-windows-msvc",
+  "aarch64-pc-windows-msvc",
+]
+
+# 需要安装的组件
+components = [
+    "rustc",          # Rust 编译器
+    "rust-std",       # 标准库
+    "cargo",          # 包管理器
+    "rustfmt",        # 代码格式化工具
+    "clippy",         # 代码检查工具
+]
