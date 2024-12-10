@@ -1,15 +1,15 @@
 {
   "name": "@gogors/postcss-lightningcss-rs-darwin-arm64",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "os": [
     "darwin"
   ],
   "cpu": [
     "arm64"
   ],
-  "main": "postcss-lightningcss-rs.darwin-arm64.node",
+  "main": "binding.node",
   "files": [
-    "postcss-lightningcss-rs.darwin-arm64.node"
+    "binding.node"
   ],
   "description": "postcss-lightningcss-rs",
   "author": {

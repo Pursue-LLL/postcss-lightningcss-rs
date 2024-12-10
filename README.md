@@ -1,3 +1,6 @@
+[中文文档](./README_CN.md)
+
+
 # postcss-lightningcss-rs
 
 `postcss-lightningcss-rs` is a PostCSS plugin that combines CSS compression and transformation using [lightningcss](https://lightningcss.dev/) to compile and minify your CSS.
@@ -45,8 +48,6 @@ postcssLightningcss({
 
   // Individually enable various CSS draft syntaxes
   drafts: {
-    // Enable CSS nesting (default: false)
-    nesting: false,
     // Enable custom media queries (default: false)
     customMedia: false,
     // Enable deep selector combinator (default: false) to parse Vue/Angular >>> and /deep/ selector operators
@@ -63,7 +64,7 @@ postcssLightningcss({
 
 ### Feature flags
 
-The `include` and `exclude` options allow you to explicitly enable or disable certain features. These options override the defaults set based on the provided browser targets. For example, you might want to compile only colors and use other tools for autoprefixing or other features. Or, you might want to use Lightning CSS to handle everything except vendor prefixes.
+The `include` and `exclude` options allow you to explicitly enable or disable certain features. *These options override the defaults set based on the provided browser targets*. For example, you might want to compile only colors and use other tools for autoprefixing or other features. Or, you might want to use Lightning CSS to handle everything except vendor prefixes.
 
 The `include` and `exclude` options are configured using the `Features` enum, which can be imported from lightningcss. Multiple flags can be combined using bitwise OR operations to enable or disable them.
 
@@ -79,7 +80,7 @@ let { code } = postcssLightningcssPlugin({
 });
 ```
 
-[More flags](https://lightningcss.dev/transpilation.html#feature-flags)
+[More features flags](https://lightningcss.dev/transpilation.html#feature-flags)
 
 ### unusedSymbols
 
@@ -183,7 +184,7 @@ postcssLightningcss({
 | `postcss-logical`                       | Depends on targets configuration         |
 | `postcss-media-minmax`                  | Depends on targets configuration         |
 | `postcss-multi-value-display`           | Depends on targets configuration         |
-| `postcss-nesting`                       | `options.drafts.nesting`                 |
+| `postcss-nesting`                       | Depends on targets configuration                     |
 | `postcss-normalize-display-values`      | Depends on targets configuration         |
 | `postcss-oklab-function`                | Depends on targets configuration         |
 | `postcss-overflow-shorthand`            | Depends on targets configuration         |
