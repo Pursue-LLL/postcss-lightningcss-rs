@@ -72,13 +72,21 @@ export interface PluginOptions {
   drafts?: DraftsOptions
 }
 /**
- * 转换css，通用api
+ * General API for transforming CSS
+ * @param {string} css - CSS string to transform
+ * @param {TransformOptions} options - Transform configuration options
+ * @param {Env} env - NAPI environment object
+ * @returns {Promise<unknown>} Transformed result
+ * @throws {Error} Throws error if transformation fails
 */
-function transform(css: string, options: TransformOptions): unknown
+function transform(css: string, options: TransformOptions): Promise<{ code: string; map?: string; exports?: Record<string, { name: string; composes?: string[]; type: 'local' | 'global' | 'dependency' }[]>; references?: Record<string, { name: string; composes?: string[]; type: 'local' | 'global' | 'dependency' }[]>; dependencies?: { type: string; specifier: string; placeholder?: string; media?: string }[] }>
 /**
- * 导出 PostCSS 插件对象
+ * @typedef {Object} PluginOptions
+ * @property {boolean | RegExp | 'auto' | undefined} cssModules
+ * @param partialOptions {LightningcssPluginOptions}
+ * @returns {import('postcss').Plugin}
 */
-function postcssLightningcssPlugin(options: PluginOptions): object
+function postcssLightningcssPlugin(options: PluginOptions): import('postcss').Plugin
 export const enum Features {
   Nesting = 1,
   NotSelectorList = 2,

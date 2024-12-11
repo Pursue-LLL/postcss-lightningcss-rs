@@ -1,6 +1,6 @@
 {
   "name": "@gogors/postcss-lightningcss-rs-win32-arm64-msvc",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.5",
   "os": [
     "win32"
   ],
@@ -24,5 +24,8 @@
     "registry": "https://registry.npmjs.org",
     "access": "public"
   },
-  "repository": "git@github.com:Pursue-LLL/postcss-lightningcss-rs.git"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pursue-LLL/postcss-lightningcss-rs.git"
+  }
 }

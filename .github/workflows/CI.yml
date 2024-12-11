@@ -407,31 +407,19 @@ jobs:
           npm install -g @napi-rs/cli
       - name: Publish
         run: |
-          # 启用 npm 包的来源证明功能
+          npm config set registry https://registry.npmjs.org
           npm config set provenance true
 
-          # 检查最近一次的 git 提交信息
-          # git log -1 获取最后一次提交
-          # --pretty=%B 只显示提交消息主体
-          # grep 检查是否匹配特定格式
-
-          # 检查是否匹配完整的版本号格式（如 "1.0.0"）
           if git log -1 --pretty=%B | grep "v[0-9]\+\.[0-9]\+\.[0-9]\+$";
           then
-            # 配置 npm registry 的认证令牌
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-            # 发布正式版本
-            npm publish --access public
+            npm publish --access public || true
 
-          # 检查是否匹配预发布版本号格式（如 "1.0.0-beta.1"）
           elif git log -1 --pretty=%B | grep "v[0-9]\+\.[0-9]\+\.[0-9]\+";
           then
-            # 配置 npm registry 的认证令牌
             echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
-            # 发布预发布版本，使用 next 标签
-            npm publish --tag next --access public
+            npm publish --tag next --access public || true
 
-          # 如果都不匹配，说明不是发布提交，仅推送代码
           else
             echo "Not a release, skipping publish"
           fi
