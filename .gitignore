@@ -201,3 +201,6 @@ package2.json
 README_CN.md
 
 .cargo-cache
+
+.cargo/config.local.toml
+.cargo/config.toml.backup

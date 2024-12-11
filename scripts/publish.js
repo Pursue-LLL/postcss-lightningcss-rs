@@ -1,14 +1,13 @@
 /**
  * @file publish.js
- * @description Local build and publish script
+ * @description 本地构建发布脚本，支持从macos编译linux和windows
  */
 
 const { execSync } = require('child_process');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 
-// Configuration
+// 配置信息
 const config = {
   targets: [
     {
@@ -30,256 +29,197 @@ const config = {
       target: 'x86_64-unknown-linux-gnu',
       build: 'yarn build --target x86_64-unknown-linux-gnu',
       outputDir: 'npm/linux-x64-gnu',
-      docker: {
-        image: 'ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian',
-        platform: 'linux/amd64',
-      },
+      setup: [
+        'rustup target add x86_64-unknown-linux-gnu',
+      ],
     },
     {
       platform: 'linux',
       target: 'aarch64-unknown-linux-gnu',
       build: 'yarn build --target aarch64-unknown-linux-gnu',
       outputDir: 'npm/linux-arm64-gnu',
-      docker: {
-        image: 'ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64',
-        platform: 'linux/arm64',
-      },
+      setup: [
+        'rustup target add aarch64-unknown-linux-gnu',
+      ],
     },
     {
       platform: 'linux',
       target: 'aarch64-unknown-linux-musl',
       build: 'yarn build --target aarch64-unknown-linux-musl',
       outputDir: 'npm/linux-arm64-musl',
-      docker: {
-        image: 'ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine',
-        platform: 'linux/arm64',
-        setup: 'rustup target add aarch64-unknown-linux-musl',
-      },
+      setup: [
+        'rustup target add aarch64-unknown-linux-musl',
+      ],
     },
+    // {
+    //   platform: 'linux',
+    //   target: 'x86_64-unknown-linux-musl',
+    //   build: 'yarn build --target x86_64-unknown-linux-musl',
+    //   outputDir: 'npm/linux-x64-musl',
+    //   setup: [
+    //     'rustup target add x86_64-unknown-linux-musl',
+    //   ],
+    // },
     {
       platform: 'windows',
       target: 'x86_64-pc-windows-msvc',
       build: 'yarn build --target x86_64-pc-windows-msvc',
-      outputDir: 'npm/win-x64-msvc',
+      outputDir: 'npm/win32-x64-msvc',
       setup: 'rustup target add x86_64-pc-windows-msvc',
     },
     {
       platform: 'windows',
       target: 'aarch64-pc-windows-msvc',
       build: 'yarn build --target aarch64-pc-windows-msvc',
-      outputDir: 'npm/win-arm64-msvc',
+      outputDir: 'npm/win32-arm64-msvc',
       setup: 'rustup target add aarch64-pc-windows-msvc',
     }
   ],
 };
 
-// Execute command
+// 执行命令
 function exec(command, options = {}) {
   try {
     execSync(command, { stdio: 'inherit', ...options });
     return true;
   } catch (error) {
-    console.error(`Command execution failed: ${command}`);
+    console.error(`命令执行失败: ${command}`);
     console.error(error);
     return false;
   }
 }
 
-// Create cache directories
-function ensureCacheDirs() {
-  const userHome = os.homedir();
-  const dirs = [
-    '.cargo/git/db',
-    '.cargo/registry/cache',
-    '.cargo/registry/index',
-  ];
-
-  dirs.forEach(dir => {
-    const fullPath = path.join(userHome, dir);
-    if (!fs.existsSync(fullPath)) {
-      fs.mkdirSync(fullPath, { recursive: true });
-    }
-  });
-}
-
-// Check if Docker image exists
-function checkImage(imageName) {
-  try {
-    execSync(`docker image inspect ${imageName}`, { stdio: 'ignore' });
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-// Pull Docker image
-function pullImage(target) {
-  console.log(`Pulling image: ${target.docker.image}`);
-  try {
-    // Ensure correct platform image
-    const pullCommand = `docker pull --platform ${target.docker.platform} ${target.docker.image}`;
-    console.log('Pull command:', pullCommand);
-    execSync(pullCommand, { stdio: 'inherit' });
-    return true;
-  } catch (error) {
-    console.error('Failed to pull image:', error);
-    return false;
-  }
-}
-
-// Build in Docker
-function buildInDocker(target) {
-  const projectRoot = path.join(__dirname, '..');
-  const userHome = os.homedir();
-
-  // Check and pull image
-  if (!checkImage(target.docker.image)) {
-    if (!pullImage(target)) {
-      throw new Error(`Unable to pull image: ${target.docker.image}`);
-    }
-  }
-
-  // Build Docker command array
-  const dockerArgs = [
-    'docker',
-    'run',
-    '--pull never',
-    '--rm',
-    `--platform ${target.docker.platform}`,
-    '--user 0:0',
-    `-v ${userHome}/.cargo/git/db:/usr/local/cargo/git/db`,
-    `-v ${userHome}/.cargo/registry/cache:/usr/local/cargo/registry/cache`,
-    `-v ${userHome}/.cargo/registry/index:/usr/local/cargo/registry/index`,
-    `-v ${projectRoot}:/build`,
-    '-w /build',
-    target.docker.image
-  ];
-
-  // Build command array
-  const commands = [
-    'corepack enable',
-    'corepack prepare yarn@4.5.1 --activate',
-    'yarn install',
-    target.docker.setup,
-    target.build
-  ].filter(Boolean); // Remove empty values
-
-  // Join commands into a string
-  const shellCommand = commands.join(' && ');
-
-  // Add shell command to Docker args
-  dockerArgs.push('sh', '-c', `"${shellCommand}"`);
-
-  // Build complete Docker command
-  const dockerCommand = dockerArgs.join(' ');
-
-  console.log('Executing Docker command:', dockerCommand);
-
-  try {
-    return exec(dockerCommand, {
-      stdio: 'inherit',  // Show detailed output
-      shell: true        // Use shell to execute
-    });
-  } catch (error) {
-    console.error('Docker command execution failed:', error);
-    throw error;
-  }
-}
-
-// Check version format
+// 检查版本号格式
 function checkVersion() {
   try {
-    // Read version from package.json
+    // 读取 package.json 获取版本号
     const packagePath = path.join(__dirname, '../package.json');
     const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
     const { version } = packageJson;
 
-    // Check version type
+    // 判断版本类型
     const isRelease = /^\d+\.\d+\.\d+$/.test(version);
     const isPreRelease = /^\d+\.\d+\.\d+-.+$/.test(version);
 
     return { isRelease, isPreRelease, version };
   } catch (error) {
-    console.error('Failed to read version');
+    console.error('读取版本号失败');
     console.error(error);
     return { isRelease: false, isPreRelease: false, version: null };
   }
 }
 
-// Build function
+// 构建函数
 async function build() {
-  console.log('Starting build...');
+  console.log('----启用 corepack...----');
+  exec('corepack enable');
+  console.log('----安装依赖...----');
+  exec('yarn install');
 
-  // Ensure npm directory exists
-  const npmDir = path.join(__dirname, '../npm');
-  if (!fs.existsSync(npmDir)) {
-    fs.mkdirSync(npmDir, { recursive: true });
+  // 在检查依赖之前，先备份现有的 config.toml（如果存在的话）
+  const cargoConfigPath = path.join(__dirname, '../.cargo/config.toml');
+  const cargoConfigBackupPath = path.join(__dirname, '../.cargo/config.toml.backup');
+
+  let hasExistingConfig = false;
+  if (fs.existsSync(cargoConfigPath)) {
+    console.log('备份现有的 cargo 配置...');
+    fs.copyFileSync(cargoConfigPath, cargoConfigBackupPath);
+    hasExistingConfig = true;
   }
 
-  // Ensure Docker cache directories exist
-  ensureCacheDirs();
+  try {
+    console.log('----检查依赖...----');
+    checkDependencies();  // 这里会生成 config.local.toml
 
-  // Build for each target platform
-  for (const target of config.targets) {
-    console.log(`Building ${target.platform} - ${target.target}`);
-
-    // Ensure output directory exists
-    const outputDir = path.join(__dirname, '..', target.outputDir);
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
+    // 将 config.local.toml 复制为 config.toml
+    const localConfigPath = path.join(__dirname, '../.cargo/config.local.toml');
+    if (fs.existsSync(localConfigPath)) {
+      console.log('使用本地配置...');
+      fs.copyFileSync(localConfigPath, cargoConfigPath);
     }
 
-    // Execute setup command if exists
-    if (target.setup) {
-      console.log(`Executing setup command: ${target.setup}`);
-      const setupSuccess = exec(target.setup);
-      if (!setupSuccess) {
-        console.error(`${target.platform} setup failed`);
+    console.log('----开始构建...----');
+    // 确保 npm 目录存在
+    const npmDir = path.join(__dirname, '../npm');
+    if (!fs.existsSync(npmDir)) {
+      fs.mkdirSync(npmDir, { recursive: true });
+    }
+
+    // 为每个目标平台构建
+    for (const target of config.targets) {
+      console.log(`构建 ${target.platform} - ${target.target}`);
+
+      // 确保输出目录存在
+      const outputDir = path.join(__dirname, '..', target.outputDir);
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+      }
+
+      if (target.setup) {
+        console.log(`执行 setup 命令...`);
+        // 处理 setup 命令数组
+        const setupCommands = Array.isArray(target.setup) ? target.setup : [target.setup];
+        for (const cmd of setupCommands) {
+          console.log(`执行: ${cmd}`);
+          const setupSuccess = exec(cmd);
+          if (!setupSuccess) {
+            console.error(`${target.platform} setup 失败: ${cmd}`);
+            process.exit(1);
+          }
+        }
+      }
+
+      // 直接执行构建命令
+      const buildSuccess = exec(target.build);
+      if (!buildSuccess) {
+        console.error(`${target.platform} 构建失败`);
         process.exit(1);
+      }
+
+      // 移动构建产物，排除 postcss-lightningcss-rs.node
+      const nodeFiles = fs.readdirSync(path.join(__dirname, '../'))
+        .filter((file) => file.endsWith('.node') && file !== 'postcss-lightningcss-rs.node');
+
+      for (const file of nodeFiles) {
+        const sourcePath = path.join(__dirname, '..', file);
+        const targetPath = path.join(outputDir, file);
+
+        fs.renameSync(sourcePath, targetPath);
+        console.log(`移动 ${file} 到 ${target.outputDir}`);
       }
     }
 
-    // Execute build command based on Docker requirement
-    const buildSuccess = target.docker ? buildInDocker(target) : exec(target.build);
-
-    if (!buildSuccess) {
-      console.error(`${target.platform} build failed`);
-      process.exit(1);
-    }
-
-    // Move build artifacts
-    const nodeFiles = fs.readdirSync(path.join(__dirname, '../'))
-      .filter((file) => file.endsWith('.node'));
-
-    for (const file of nodeFiles) {
-      const sourcePath = path.join(__dirname, '..', file);
-      const targetPath = path.join(outputDir, file);
-
-      fs.renameSync(sourcePath, targetPath);
-      console.log(`Moved ${file} to ${target.outputDir}`);
+    console.log('构建完成');
+  } finally {
+    // 恢复原始配置（如果存在）
+    if (hasExistingConfig) {
+      fs.copyFileSync(cargoConfigBackupPath, cargoConfigPath);
+      fs.unlinkSync(cargoConfigBackupPath);
+    } else {
+      // 如果原来没有配置，删除临时创建的
+      if (fs.existsSync(cargoConfigPath)) {
+        fs.unlinkSync(cargoConfigPath);
+      }
     }
   }
-
-  console.log('Build completed');
 }
 
-// Publish function
+// 发布函数
 async function publish() {
-  console.log('Checking version...');
+  console.log('检查版本...');
   const { isRelease, isPreRelease } = checkVersion();
 
   if (!isRelease && !isPreRelease) {
-    console.log('Not a release commit, skipping publish');
+    console.log('不是发布提交，跳过发布');
     return;
   }
-  if (isRelease) {
-    exec('yarn publish --access public');
+  if (!isRelease) {
+    exec('yarn publish-beta');
   } else {
-    exec('yarn publish --tag next --access public');
+    exec('yarn publish-release');
   }
 }
 
-// Main function
 async function main() {
   const args = process.argv.slice(2);
   const shouldBuild = args.includes('--build');
@@ -294,12 +234,126 @@ async function main() {
   }
 
   if (!shouldBuild && !shouldPublish) {
-    console.log('Usage: node build-and-publish.js [--build] [--publish]');
+    console.log('使用方法: node publish.js [--build] [--publish]');
   }
 }
 
-// Run main function
+// 运行主函数
 main().catch((error) => {
-  console.error('Error occurred:', error);
+  console.error('发生错误:', error);
   process.exit(1);
 });
+
+function generateCargoConfig() {
+  console.log('正在生成 cargo 配置文件...');
+
+  // 获取 homebrew 安装路径
+  let homebrewPrefix;
+  try {
+    homebrewPrefix = execSync('brew --prefix', { encoding: 'utf8' }).trim();
+    console.log('Homebrew 路径:', homebrewPrefix);
+
+    // 验证链接器是否存在
+    const linkers = [
+      'x86_64-unknown-linux-gnu-gcc',
+      'aarch64-unknown-linux-gnu-gcc',
+      'aarch64-linux-musl-cc',
+      'x86_64-linux-musl-cc'
+    ];
+
+    for (const linker of linkers) {
+      const linkerPath = path.join(homebrewPrefix, 'bin', linker);
+      if (!fs.existsSync(linkerPath)) {
+        console.warn(`警告: 链接器不存在: ${linkerPath}`);
+      } else {
+        console.log(`找到链接器: ${linkerPath}`);
+      }
+    }
+  } catch (error) {
+    console.error('获取 homebrew 路径失败:', error);
+    process.exit(1);
+  }
+
+  const configContent = `[source.crates-io]
+replace-with = 'ustc'
+
+[source.ustc]
+registry = "sparse+https://mirrors.ustc.edu.cn/crates.io-index/"
+
+[registries.ustc]
+index = "https://mirrors.ustc.edu.cn/crates.io-index/"
+
+# Linux GNU targets
+[target.x86_64-unknown-linux-gnu]
+linker = "${homebrewPrefix}/bin/x86_64-unknown-linux-gnu-gcc"
+rustflags = ["-C", "target-feature=-crt-static"]
+
+[target.aarch64-unknown-linux-gnu]
+linker = "${homebrewPrefix}/bin/aarch64-unknown-linux-gnu-gcc"
+rustflags = ["-C", "target-feature=-crt-static"]
+
+# Linux MUSL targets
+[target.aarch64-unknown-linux-musl]
+linker = "${homebrewPrefix}/bin/aarch64-linux-musl-cc"
+rustflags = ["-C", "target-feature=-crt-static"]
+
+[target.x86_64-unknown-linux-musl]
+linker = "${homebrewPrefix}/bin/x86_64-linux-musl-cc"
+rustflags = ["-C", "target-feature=-crt-static"]
+`;
+
+  const configPath = path.join(__dirname, '../.cargo/config.local.toml');
+
+  // 确保 .cargo 目录存在
+  const cargoDir = path.dirname(configPath);
+  if (!fs.existsSync(cargoDir)) {
+    fs.mkdirSync(cargoDir, { recursive: true });
+  }
+
+  // 写入配置文件
+  try {
+    fs.writeFileSync(configPath, configContent, 'utf8');
+    console.log('已生成 cargo 配置文件:', configPath);
+  } catch (error) {
+    console.error('生成 cargo 配置文件失败:', error);
+    process.exit(1);
+  }
+}
+
+function checkDependencies() {
+  // 安装基本的交叉编译工具，支持从macos编译linux
+  if (process.platform === 'darwin') {
+    try {
+      // 使用中科大源
+      const HOMEBREW_CORE_GIT_REMOTE = 'https://mirrors.ustc.edu.cn/homebrew-core.git';
+      const HOMEBREW_BOTTLE_DOMAIN = 'https://mirrors.ustc.edu.cn/homebrew-bottles';
+
+      // 安装交叉编译工具链
+      const commands = [
+        'brew tap messense/macos-cross-toolchains',
+        'brew install messense/macos-cross-toolchains/x86_64-unknown-linux-gnu',
+        'brew install messense/macos-cross-toolchains/aarch64-unknown-linux-gnu',
+        'brew install FiloSottile/musl-cross/musl-cross'
+      ];
+
+      for (const cmd of commands) {
+        console.log(`执行命令: ${cmd}`);
+        execSync(cmd, {
+          stdio: 'inherit',
+          env: {
+            ...process.env,
+            HOMEBREW_CORE_GIT_REMOTE,
+            HOMEBREW_BOTTLE_DOMAIN
+          }
+        });
+      }
+
+      // 安装完工具链后生成配置文件
+      generateCargoConfig();
+
+    } catch (error) {
+      console.error('安装交叉编译工具链失败:', error);
+      process.exit(1);
+    }
+  }
+}

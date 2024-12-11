@@ -1,28 +1,22 @@
 {
   "name": "@gogors/postcss-lightningcss-rs-darwin-x64",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.5",
   "os": [
     "darwin"
   ],
   "cpu": [
     "x64"
   ],
-  "main": "postcss-lightningcss-rs.darwin-x64.node",
+  "main": "binding.node",
   "files": [
-    "postcss-lightningcss-rs.darwin-x64.node"
+    "binding.node"
   ],
-  "description": "postcss-lightningcss-rs",
-  "author": {
-    "name": "YuluLiu",
-    "email": "yululiu2018@gmail.com"
-  },
   "license": "MIT",
   "engines": {
-    "node": ">= 20"
+    "node": ">= 10"
   },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org",
-    "access": "public"
-  },
-  "repository": "git@github.com:Pursue-LLL/postcss-lightningcss-rs.git"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pursue-LLL/postcss-lightningcss-rs.git"
+  }
 }

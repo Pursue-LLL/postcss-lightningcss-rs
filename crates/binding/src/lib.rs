@@ -11,9 +11,14 @@ use napi::{Env, JsFunction, JsObject, JsUnknown, Result};
 use napi_derive::napi;
 use lightningcss_rs::types::{PluginOptions, TransformOptions};
 
-#[napi]
+#[napi(ts_return_type = "Promise<{ code: string; map?: string; exports?: Record<string, { name: string; composes?: string[]; type: 'local' | 'global' | 'dependency' }[]>; references?: Record<string, { name: string; composes?: string[]; type: 'local' | 'global' | 'dependency' }[]>; dependencies?: { type: string; specifier: string; placeholder?: string; media?: string }[] }>")]
 /**
- * Transform CSS with general API
+ * General API for transforming CSS
+ * @param {string} css - CSS string to transform
+ * @param {TransformOptions} options - Transform configuration options
+ * @param {Env} env - NAPI environment object
+ * @returns {Promise<unknown>} Transformed result
+ * @throws {Error} Throws error if transformation fails
  */
 pub fn transform(css: String, options: TransformOptions, env: Env) -> napi::Result<JsUnknown> {
   let res = transform_css(&css, &options);
@@ -24,9 +29,12 @@ pub fn transform(css: String, options: TransformOptions, env: Env) -> napi::Resu
 }
 
 #[allow(dead_code)]
-#[napi]
+#[napi(ts_return_type = "import('postcss').Plugin")]
 /**
- * Export PostCSS plugin object
+ * @typedef {Object} PluginOptions
+ * @property {boolean | RegExp | 'auto' | undefined} cssModules
+ * @param partialOptions {LightningcssPluginOptions}
+ * @returns {import('postcss').Plugin}
  */
 fn postcss_lightningcss_plugin(options: PluginOptions, env: Env) -> Result<JsObject> {
   let mut plugin = env.create_object()?;

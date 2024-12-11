@@ -1,6 +1,6 @@
 {
   "name": "@gogors/postcss-lightningcss-rs",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "description": "postcss-lightningcss-rs",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,9 @@
     "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
     "version": "napi version",
-    "publish:local": "node scripts/publish.js --build --publish"
+    "publish:local": "node scripts/publish.js --build --publish",
+    "publish-beta": "npm publish --tag next",
+    "publish-release": "npm publish"
   },
   "types": "index.d.ts",
   "napi": {
@@ -37,7 +39,10 @@
   "ava": {
     "timeout": "3m"
   },
-  "repository": "git@github.com:Pursue-LLL/postcss-lightningcss-rs.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pursue-LLL/postcss-lightningcss-rs.git"
+  },
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
     "access": "public"
