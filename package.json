@@ -1,8 +1,26 @@
 {
   "name": "@gogors/postcss-lightningcss-rs",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "postcss-lightningcss-rs",
   "main": "index.js",
+  "keywords": [
+    "postcss",
+    "lightningcss",
+    "rs",
+    "postcss-lightningcss-rs",
+    "cssminifier",
+    "minify",
+    "compress",
+    "optimisation",
+    "lightningcss",
+    "postcss-plugin",
+    "css",
+    "cssminifier",
+    "cssminify",
+    "csscompress",
+    "cssoptimisation",
+    "rust"
+  ],
   "scripts": {
     "artifacts": "napi artifacts",
     "build": "napi build --cargo-cwd crates/binding --platform --release",
